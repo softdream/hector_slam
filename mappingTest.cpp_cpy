@@ -1,0 +1,114 @@
+#include "GridMapBase.h"
+#include "OccGridMapBase.h"
+#include "GridMap.h"
+#include "OccGridMapUtil.h"
+#include "ScanMatcher.h"
+#include "MapRepMultiMap.h"
+#include "HectorSlamProcessor.h"
+
+#include "dataType.h"
+#include "laserSimulation.h"
+
+#include <iostream>
+#include <opencv2/opencv.hpp>
+
+void laserData2Container( const slam::sensor::LaserScan &scan, hectorslam::DataContainer &container, float scaleToMap )
+{
+        size_t size = 1440;
+
+        float angle = -3.14159f;
+        container.clear();
+        container.setOrigo( Eigen::Vector2f::Zero() );
+
+        for( int i = 0; i < size; i ++ ){ 
+                float dist = scan.ranges[ i ];
+
+                if( dist >= 0.0099999998f && dist <= 25.0000000000f ){
+ //                       dist *= scaleToMap;
+			//std::cout<<"dist = "<<dist<<std::endl;
+                        container.add( Eigen::Vector2f( cos(angle) * dist, sin(angle) * dist ) );
+                }
+
+                angle += 0.0043633231f;
+        }
+
+        std::cout<<"Scan Container Size: "<<container.getSize()<<std::endl;
+}
+
+void displayMap( cv::Mat &image, const hectorslam::GridMap &gridMap )
+{
+        image = cv::Mat::zeros(gridMap.getSizeX(), gridMap.getSizeY(), CV_8UC3);
+
+        int occupiedCount = 0;
+
+        for( int i = 0; i < gridMap.getSizeX(); i ++ ){ 
+                for( int j = 0; j < gridMap.getSizeY(); j ++ ){
+                        if( gridMap.isFree( i, j ) ){
+                                cv::circle(image, cv::Point2d(i, j), 1, cv::Scalar(255, 255, 255), 1);
+                                //std::cout<<"Free Point: ( "<<i<<", "<<j<<" )"<<std::endl;
+                        }
+                        else if( gridMap.isOccupied( i, j ) ){
+                                occupiedCount ++;
+                                //std::cout<<"Occupied Point: ( "<<i<<", "<<j<<" )"<<std::endl;
+                                cv::circle(image, cv::Point2d(i, j), 1, cv::Scalar(0, 0, 255), 1);
+                        }
+                }
+        }
+
+        std::cout<<"---------------- Result --------------------"<<std::endl;
+        std::cout<<"Occupied Points Number: "<<occupiedCount<<std::endl;
+
+        cv::imshow( "map", image);
+}
+
+int main()
+{
+	std::cout<<" ---------- Mappint Test -------------"<<std::endl;
+
+	bool got_first_scan_;       // 是否获得第一帧scan标志
+	double xmin_ = -40.0f, xmax_ = 40.0f, ymin_ = -40.0f, ymax_ = 40.0;      // 地图的边界
+    	float resolution_ = 0.05f;
+
+	Eigen::Vector2i map_size_;
+    	Eigen::Vector2f offset_;
+
+	map_size_[0] = (xmax_ - xmin_) / resolution_;
+    	map_size_[1] = (ymax_ - ymin_) / resolution_;
+
+	offset_[0] = xmin_;
+    	offset_[1] = ymax_;
+
+	// --------------- -----------------//
+	slam::simulation::Simulation simulation;
+        // open the simulation file
+        std::string file_name = "laser_data2.txt";
+        simulation.openSimulationFile( file_name );
+
+	// ----------------- Init a Image ---------------------//
+        cv::Mat image = cv::Mat::zeros(map_size_[0], map_size_[1], CV_8UC3);
+        cv::imshow("map", image);
+
+	Eigen::Vector3f robotPoseWorld( 0.0f, 0.0f, 0.0f );
+
+	while( !simulation.endOfFile() ){
+                slam::sensor::LaserScan scan;
+                simulation.readAFrameData( scan ); // read the laser data
+
+                hectorslam::DataContainer scanContainer;
+                laserData2Container( scan, scanContainer, 20 );
+
+                std::cout<<"frame count: "<<simulation.getFrameCount()<<std::endl;
+		hectorslam::GridMap *hector_map_ = new hectorslam::GridMap(resolution_, map_size_, offset_);
+	
+		hector_map_->updateByScanJustOnce(scanContainer, robotPoseWorld);
+		displayMap( image, *hector_map_ );	
+
+		delete hector_map_;
+		
+		cv::waitKey(30);
+	}
+
+	//cv::waitKey(0);
+	
+	return 0;
+}
