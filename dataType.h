@@ -71,7 +71,7 @@ struct LidarScan{
 	
 };
 
-typedef struct LidarScan<1440> LaserScan;
+typedef struct LidarScan<901> LaserScan;
 
 struct IMU
 {

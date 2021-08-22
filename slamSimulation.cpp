@@ -37,7 +37,7 @@
 
 void laserData2Container( const slam::sensor::LaserScan &scan, hectorslam::DataContainer &container, float scaleToMap )
 {
-        size_t size = 1440;
+        size_t size = 901;
 
         float angle = -3.14159f;
         container.clear();
@@ -46,12 +46,12 @@ void laserData2Container( const slam::sensor::LaserScan &scan, hectorslam::DataC
         for( int i = 0; i < size; i ++ ){
                 float dist = scan.ranges[ i ];
 
-                if( dist >= 0.0099999998f && dist <= 25.0000000000f ){
+                if( dist >= 0.2f && dist <= 50.0000000000f ){
                         dist *= scaleToMap;
                         container.add( Eigen::Vector2f( cos(angle) * dist, sin(angle) * dist ) );
                 }
 
-                angle += 0.0043633231f;
+                angle += 0.0069800001f;
         }
 
         std::cout<<"Scan Container Size: "<<container.getSize()<<std::endl;
@@ -133,7 +133,7 @@ int main()
 
 	// ----------------- Init a Image ---------------------//
         cv::Mat image = cv::Mat::zeros(slamProcessor->getGridMap(0).getSizeX(), slamProcessor->getGridMap(0).getSizeY(), CV_8UC3);
-        cv::imshow("map", image);
+ //       cv::imshow("map", image);
 
 
 	// --------------- Begin to Mapping ----------------//

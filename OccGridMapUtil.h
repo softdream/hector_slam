@@ -87,8 +87,8 @@ public:
 
         float sinRot = sin(pose[2]);
         float cosRot = cos(pose[2]);
-	std::cout<<"SinRot: "<<sinRot<<std::endl;
-	std::cout<<"CosRot: "<<cosRot<<std::endl;
+	//std::cout<<"SinRot: "<<sinRot<<std::endl;
+	//std::cout<<"CosRot: "<<cosRot<<std::endl;
 	
         H = Eigen::Matrix3f::Zero();
         dTr = Eigen::Vector3f::Zero();
@@ -104,10 +104,12 @@ public:
             // transformedPointData[1]--栅格值x方向的梯度
             // transformedPointData[2]--栅格值y方向的梯度
             Eigen::Vector3f transformedPointData(interpMapValueWithDerivatives(transform * currPoint));
+	//	std::cout<<"interpMapValue = "<<interpMapValueWithDerivatives(transform * currPoint)[0]<<std::endl;
 
             // 目标函数f(x)  (1-M(Pm))
             float funVal = 1.0f - transformedPointData[0];
-
+	//    std::cout<<"funVal = "<<funVal<<std::endl;
+	
             // 计算g列向量的 x 与 y 方向的值
             dTr[0] += transformedPointData[1] * funVal;
             dTr[1] += transformedPointData[2] * funVal;
@@ -172,6 +174,7 @@ public:
             intensities[0] = getUnfilteredGridPoint(index); // 得到M(P00),P00(x0,y0)
             cacheMethod.cacheData(index, intensities[0]);
         }
+//	std::cout<<"intensities[0] = "<<intensities[0]<<std::endl;
 
         ++index;
         if (!cacheMethod.containsCachedData(index, intensities[1]))
@@ -179,6 +182,7 @@ public:
             intensities[1] = getUnfilteredGridPoint(index);
             cacheMethod.cacheData(index, intensities[1]);
         }
+//	std::cout<<"intensities[1] = "<<intensities[1]<<std::endl;
 
         index += sizeX - 1;
         if (!cacheMethod.containsCachedData(index, intensities[2]))
@@ -186,6 +190,8 @@ public:
             intensities[2] = getUnfilteredGridPoint(index);
             cacheMethod.cacheData(index, intensities[2]);
         }
+//	std::cout<<"intensities[2] = "<<intensities[2]<<std::endl;
+
 
         ++index;
         if (!cacheMethod.containsCachedData(index, intensities[3]))
@@ -193,6 +199,7 @@ public:
             intensities[3] = getUnfilteredGridPoint(index);
             cacheMethod.cacheData(index, intensities[3]);
         }
+//	std::cout<<"intensities[3] = "<<intensities[3]<<std::endl;
 
         float dx1 = intensities[0] - intensities[1]; // 求得(M(P00) - M(P10))的值
         float dx2 = intensities[2] - intensities[3]; // 求得(M(P01) - M(P11))的值

@@ -80,7 +80,7 @@ public:
     */
     void update(const DataContainer &dataContainer, const Eigen::Vector3f &poseHintWorld, bool map_without_matching = false)
     {
-        //std::cout << "\nph:\n" << poseHintWorld << "\n";
+        std::cout << "\nph:\n" << poseHintWorld << "\n";
 
         /** 1. 位姿匹配 **/
         Eigen::Vector3f newPoseEstimateWorld;
